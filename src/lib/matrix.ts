@@ -59,6 +59,18 @@ export default class Matrix {
     );
   }
 
+  transpose(): Matrix {
+    const transposed = new Matrix(this.rowCount, this.colCount);
+
+    for (let j = 0; j < transposed.rowCount; j++) {
+      for (let i = 0; i < transposed.colCount; i++) {
+        transposed.setCell(this.getCell(j, i), i, j);
+      }
+    }
+
+    return transposed;
+  }
+
   mult(b: number | Matrix): Matrix {
     if (typeof b === "number") {
       for (let j = 0; j < this.rowCount; j++) {
@@ -66,8 +78,35 @@ export default class Matrix {
           this.setCell(b * this.getCell(i, j), i, j);
         }
       }
-    } else {
+
+      return this.copy();
     }
+
+    if (this.colCount !== b.rowCount) {
+      console.error("Mismatched column or row size between matrices");
+      return;
+    }
+
+    const thisCopy = this.copy();
+    const product = new Matrix(b.colCount, this.rowCount);
+    for (let j = 0; j < product.rowCount; j++) {
+      for (let i = 0; i < product.colCount; i++) {
+        const row = thisCopy.rows[j];
+        const col = thisCopy.transpose().rows[i];
+
+        let sum = 0;
+        for (let index = 0; index < row.length; index++) {
+          sum += row[index] * col[index];
+        }
+
+        product.setCell(sum, i, j);
+      }
+    }
+
+    this.colCount = product.colCount;
+    this.rowCount = product.rowCount;
+    this.rows = product.rows.slice().map((row) => row.slice());
+
     return this.copy();
   }
 
